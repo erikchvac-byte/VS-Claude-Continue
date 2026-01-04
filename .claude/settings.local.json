@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(unzip:*)",
+      "Bash(node -e:*)",
+      "Bash(move extension.ts srcextension.ts)",
+      "Bash(npm install:*)",
+      "Bash(npm run compile:*)",
+      "Bash(mv claude-md-continue-sync-1.0.0.vsix claude-md-continue-sync-1.0.0.vsix.backup)",
+      "Bash(npx @vscode/vsce package)",
+      "Bash(code --install-extension:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)"
+    ]
+  }
+}
