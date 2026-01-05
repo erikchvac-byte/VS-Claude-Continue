@@ -17,7 +17,8 @@ This extension **bridges that gap** by automatically syncing your `CLAUDE.md` fi
 
 - 🔄 **Automatic Synchronization** - Watches for changes to CLAUDE.md files and syncs instantly
 - 📁 **Multi-Level Rules** - Merges global, project, and local rules in priority order
-- 🎯 **File Watching** - Monitors CLAUDE.md, CLAUDE.local.md, and ~/.claude/CLAUDE.md
+- 🎯 **File Watching** - Monitors CLAUDE.md, CLAUDE.local.md, .claude/instructions.md, and ~/.claude/CLAUDE.md
+- 🆕 **Modern Convention Support** - Full support for `.claude/instructions.md` files
 - ⚙️ **Configurable** - Control auto-sync, global inclusion, and file naming
 - 🛡️ **Error Handling** - Graceful error recovery with user-friendly messages
 - 🔌 **Zero Dependencies** - Uses only VS Code and Node.js built-in APIs
@@ -58,15 +59,17 @@ This extension watches for `CLAUDE.md` files and automatically converts them to 
 Rules are merged from multiple sources in this priority order:
 
 1. **`~/.claude/CLAUDE.md`** - Global rules (applies to all projects)
-2. **`./CLAUDE.md`** - Project root rules (project-specific)
+2. **`./CLAUDE.md`** - Project root rules (project-specific, legacy format)
 3. **`./CLAUDE.local.md`** - Local/personal rules (gitignored, developer-specific)
+4. **`./.claude/instructions.md`** - Modern convention (recommended for new projects)
 
 Each file is clearly labeled in the merged output so you can see where rules came from.
 
 ### File Watching
 
-The extension watches all three locations and triggers automatic sync when any file changes:
-- ✅ Workspace `CLAUDE.md` and `CLAUDE.local.md` files
+The extension watches all four locations and triggers automatic sync when any file changes:
+- ✅ Workspace `CLAUDE.md` and `CLAUDE.local.md` files (legacy format)
+- ✅ Workspace `.claude/instructions.md` file (modern convention)
 - ✅ Global `~/.claude/CLAUDE.md` file
 - ✅ Auto-sync can be disabled via settings
 
@@ -218,11 +221,17 @@ Configure the extension via VS Code settings (`Ctrl+,` or `Cmd+,`):
 claude-md-continue-sync/
 ├── src/
 │   └── extension.ts          # Main extension code
+├── .claude/
+│   └── instructions.md       # Development instructions (modern convention)
+├── .continue/
+│   └── rules/
+│       └── 00-claude-md.md   # Auto-generated Continue rules
 ├── .vscode/
 │   ├── launch.json           # Debug configuration
 │   └── tasks.json            # Build tasks
 ├── package.json              # Extension manifest
 ├── tsconfig.json             # TypeScript config
+├── CLAUDE.md                 # Legacy project rules
 ├── README.md                 # This file
 ├── HANDOFF.md               # Project handoff documentation
 └── QUICKSTART.md            # Quick start guide
@@ -248,13 +257,15 @@ npx @vscode/vsce package
 
 Creates `claude-md-continue-sync-1.0.0.vsix`
 
-## 🐛 Bug Fixes in This Version
+## 🆕 What's New in v1.0.0
 
-This release includes critical bug fixes:
+This release includes major enhancements and bug fixes:
 
-1. **✅ CLAUDE.local.md File Watching** - Now watches `CLAUDE.local.md` for changes (previously only watched `CLAUDE.md`)
-2. **✅ Global File Watching** - Added watcher for `~/.claude/CLAUDE.md` (previously only read on activation)
-3. **✅ Error Handling** - Comprehensive try/catch blocks prevent crashes on file permission errors
+1. **✅ Modern Convention Support** - Full support for `.claude/instructions.md` files (recommended format)
+2. **✅ CLAUDE.local.md File Watching** - Now watches `CLAUDE.local.md` for changes (previously only watched `CLAUDE.md`)
+3. **✅ Global File Watching** - Added watcher for `~/.claude/CLAUDE.md` (previously only read on activation)
+4. **✅ Comprehensive Instructions** - Added detailed `.claude/instructions.md` for extension development
+5. **✅ Error Handling** - Comprehensive try/catch blocks prevent crashes on file permission errors
 
 ## 🤝 Compatibility
 

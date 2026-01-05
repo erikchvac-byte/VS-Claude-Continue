@@ -3,8 +3,8 @@
 **Project**: CLAUDE.md Continue Sync VS Code Extension
 **Repository**: https://github.com/erikchvac-byte/VS-Claude-Continue
 **Version**: 1.0.0
-**Date**: 2026-01-04
-**Status**: ✅ Fully Functional and Tested
+**Date**: 2026-01-05
+**Status**: ✅ Fully Functional and Tested - Now with .claude/instructions.md Support
 
 ---
 
@@ -34,11 +34,11 @@ Enable Continue extension to use CLAUDE.md files from Claude Code without manual
 ### High-Level Flow
 
 ```
-User creates/edits CLAUDE.md
+User creates/edits CLAUDE.md or .claude/instructions.md
          ↓
 File System Watcher detects change
          ↓
-Extension reads CLAUDE.md files (3 sources)
+Extension reads instruction files (4 sources)
          ↓
 Merges content in priority order
          ↓
@@ -55,6 +55,8 @@ Continue extension auto-loads rules
 claude-md-continue-sync/
 ├── src/
 │   └── extension.ts              # Main extension code (195 lines)
+├── .claude/
+│   └── instructions.md           # Development instructions (modern convention)
 ├── .vscode/
 │   ├── launch.json               # Debug configuration
 │   └── tasks.json                # Build tasks
@@ -65,6 +67,7 @@ claude-md-continue-sync/
 ├── tsconfig.json                 # TypeScript configuration
 ├── .gitignore                    # Git ignore rules
 ├── .vscodeignore                 # VSIX packaging exclusions
+├── CLAUDE.md                     # Legacy project rules
 ├── README.md                     # User documentation
 ├── HANDOFF.md                    # This file
 ├── QUICKSTART.md                 # Quick start guide
@@ -87,16 +90,19 @@ claude-md-continue-sync/
   - Watches for configuration changes
 
 #### 2. File Watchers (`setupFileWatcher`)
-- **Location**: `src/extension.ts:47-68`
-- **Purpose**: Monitor file system for CLAUDE.md changes
+- **Location**: `src/extension.ts:49-78`
+- **Purpose**: Monitor file system for CLAUDE.md and .claude/instructions.md changes
 - **Watchers**:
   1. **Workspace Watcher**: Monitors `**/CLAUDE*.md` (catches both CLAUDE.md and CLAUDE.local.md)
-  2. **Global Watcher**: Monitors `~/.claude/CLAUDE.md` specifically
+  2. **Instructions Watcher**: Monitors `**/.claude/instructions.md` (modern convention)
+  3. **Global Watcher**: Monitors `~/.claude/CLAUDE.md` specifically
 - **Events**: Handles `onDidChange`, `onDidCreate`, `onDidDelete`
-- **Bug Fix**: Originally only watched `**/CLAUDE.md`, now uses `**/CLAUDE*.md` pattern
+- **Enhancements**:
+  - Originally only watched `**/CLAUDE.md`, now uses `**/CLAUDE*.md` pattern
+  - Added support for `.claude/instructions.md` files (v1.0.0 update)
 
 #### 3. Sync Logic (`syncAllClaudeMdFiles`, `syncClaudeMdForWorkspace`)
-- **Location**: `src/extension.ts:81-164`
+- **Location**: `src/extension.ts:95-179`
 - **Purpose**: Core synchronization logic
 - **Process**:
   1. Read configuration (rulePrefix, includeGlobal)
@@ -104,12 +110,13 @@ claude-md-continue-sync/
   3. For each workspace:
      - Ensure `.continue/rules/` directory exists
      - Read global CLAUDE.md (if includeGlobal=true)
-     - Read workspace CLAUDE.md
-     - Read workspace CLAUDE.local.md
+     - Read workspace CLAUDE.md (legacy format)
+     - Read workspace CLAUDE.local.md (personal overrides)
+     - Read workspace .claude/instructions.md (modern convention)
      - Merge content with section headers
      - Wrap in YAML frontmatter
      - Write to `.continue/rules/{rulePrefix}.md`
-     - Clean up if no CLAUDE.md files exist
+     - Clean up if no instruction files exist
 
 #### 4. Rule Generation (`generateContinueRule`)
 - **Location**: `src/extension.ts:166-175`
@@ -143,6 +150,15 @@ claude-md-continue-sync/
 **Problem**: File operations could crash the extension on permission errors or missing directories.
 **Fix**: Wrapped all file operations in try/catch blocks with user-friendly error messages (lines 92-163)
 **Impact**: Extension degrades gracefully and shows helpful errors instead of crashing
+
+### Enhancement 1: .claude/instructions.md Support ✅
+**Feature**: Added support for modern `.claude/instructions.md` convention
+**Implementation**:
+  - Added `instructionsWatcher` for monitoring `.claude/instructions.md` files (line 62)
+  - Added reading logic in sync function (lines 153-162)
+  - Updated activation events in package.json to include `.claude/instructions.md`
+  - Created comprehensive `.claude/instructions.md` for this project with development guidelines
+**Impact**: Extension now supports both legacy CLAUDE.md and modern .claude/instructions.md formats
 
 ---
 

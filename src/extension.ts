@@ -4,6 +4,7 @@ import * as path from 'path';
 import * as os from 'os';
 
 let fileWatcher: vscode.FileSystemWatcher | undefined;
+let instructionsWatcher: vscode.FileSystemWatcher | undefined;
 let globalFileWatcher: vscode.FileSystemWatcher | undefined;
 
 export function activate(context: vscode.ExtensionContext) {
@@ -57,6 +58,15 @@ function setupFileWatcher(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(fileWatcher);
 
+    // Watch for .claude/instructions.md files
+    instructionsWatcher = vscode.workspace.createFileSystemWatcher('**/.claude/instructions.md');
+
+    instructionsWatcher.onDidChange(() => syncAllClaudeMdFiles());
+    instructionsWatcher.onDidCreate(() => syncAllClaudeMdFiles());
+    instructionsWatcher.onDidDelete(() => syncAllClaudeMdFiles());
+
+    context.subscriptions.push(instructionsWatcher);
+
     // Watch for global ~/.claude/CLAUDE.md
     const globalClaudeMdPath = path.join(os.homedir(), '.claude', 'CLAUDE.md');
     globalFileWatcher = vscode.workspace.createFileSystemWatcher(globalClaudeMdPath);
@@ -72,6 +82,10 @@ function disposeFileWatcher() {
     if (fileWatcher) {
         fileWatcher.dispose();
         fileWatcher = undefined;
+    }
+    if (instructionsWatcher) {
+        instructionsWatcher.dispose();
+        instructionsWatcher = undefined;
     }
     if (globalFileWatcher) {
         globalFileWatcher.dispose();
@@ -150,6 +164,17 @@ async function syncClaudeMdForWorkspace(
             }
         }
 
+        // 4. Look for .claude/instructions.md (modern convention)
+        const claudeInstructions = path.join(workspacePath, '.claude', 'instructions.md');
+        if (fs.existsSync(claudeInstructions)) {
+            try {
+                const content = fs.readFileSync(claudeInstructions, 'utf-8');
+                claudeContent.push(`# Claude Instructions\n\n${content}`);
+            } catch (error) {
+                console.error(`Failed to read .claude/instructions.md: ${error}`);
+            }
+        }
+
         // Generate Continue rule file
         if (claudeContent.length > 0) {
             const ruleContent = generateContinueRule(claudeContent.join('\n\n---\n\n'));
@@ -192,3 +217,4 @@ ${content}
 export function deactivate() {
     disposeFileWatcher();
 }
+
